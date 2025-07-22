@@ -74,7 +74,28 @@ function isAdmin(req, res, next) {
 function broadcastUpdate() {
   io.emit('update-attendees');
 }
-
+function generateBarcode(callback) {
+  function randomCode() {
+    return 'BAR' + Math.random().toString(36).substr(2, 4).toUpperCase();
+  }
+  function checkUnique(code, cb) {
+    db.get('SELECT id FROM attendees WHERE barcode = ?', [code], (err, row) => {
+      if (err) return cb(err);
+      if (row) return cb(null, false); // Not unique
+      cb(null, true); // Unique
+    });
+  }
+  function tryGenerate(cb) {
+    const code = randomCode();
+    checkUnique(code, (err, unique) => {
+      if (err) return cb(err);
+      if (unique) return cb(null, code);
+      // Try again if not unique
+      tryGenerate(cb);
+    });
+  }
+  tryGenerate(callback);
+}
 // Multer for CSV
 const upload = multer({ dest: UPLOAD_DIR });
 
@@ -140,34 +161,39 @@ app.post('/register', (req, res) => {
       return res.redirect(req.get('Referrer') || '/');
     }
 
-    const barcode = 'BAR' + Date.now() + Math.floor(Math.random());
-
-    db.run(
-      `INSERT INTO attendees (name, email, mobile, designation, category, company, barcode, source)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, email, mobile, designation || '', category, company || '', barcode, 'manual'],
-      function (err2) {
-        if (err2) {
-          req.session.error = "Insert error.";
-          return res.redirect(req.get('Referrer') || '/');
-        }
-
-        broadcastUpdate();
-
-        // If admin clicked "Submit & Print"
-        if (req.session.user && action === 'submit-print') {
-          return res.redirect(`/badge/${this.lastID}`);
-        }
-
-        // Only show message for public/attendee registration (not admin)
-        if (!req.session.user) {
-          req.session.success = "Registration successful! Please proceed to the counter for verification or badge collection.";
-        }
-        res.redirect(req.get('Referrer') || '/');
+    generateBarcode((err, barcode) => {
+      if (err) {
+        req.session.error = "Barcode generation error.";
+        return res.redirect(req.get('Referrer') || '/');
       }
-    );
+      db.run(
+        `INSERT INTO attendees (name, email, mobile, designation, category, company, barcode, source)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, email, mobile, designation || '', category, company || '', barcode, 'manual'],
+        function (err2) {
+          if (err2) {
+            req.session.error = "Insert error.";
+            return res.redirect(req.get('Referrer') || '/');
+          }
+
+          broadcastUpdate();
+
+          // If admin clicked "Submit & Print"
+          if (req.session.user && action === 'submit-print') {
+            return res.redirect(`/badge/${this.lastID}`);
+          }
+
+          // Only show message for public/attendee registration (not admin)
+          if (!req.session.user) {
+            req.session.success = "Registration successful! Please proceed to the counter for verification or badge collection.";
+          }
+          res.redirect(req.get('Referrer') || '/');
+        }
+      );
+    });
   });
 });
+
 // Edit Attendee (admin)
 app.post('/edit/:id', isAdmin, (req, res) => {
   const { name, email, mobile, designation, category, company } = req.body;
@@ -197,6 +223,18 @@ app.post('/delete/:id', isAdmin, (req, res) => {
     }
     broadcastUpdate();
     req.session.success = "Attendee deleted!";
+    res.redirect('/admin');
+  });
+});
+
+app.post('/mark-scanned/:id', isAdmin, (req, res) => {
+  db.run('UPDATE attendees SET scanned=1 WHERE id=?', [req.params.id], function (err) {
+    if (err) {
+      req.session.error = "Could not mark as scanned.";
+      return res.redirect('/admin');
+    }
+    broadcastUpdate();
+    req.session.success = "Attendee marked as scanned!";
     res.redirect('/admin');
   });
 });
@@ -255,7 +293,7 @@ app.post('/upload-csv', isAdmin, upload.single('csvfile'), (req, res) => {
   }
   const filePath = req.file.path;
 
-  const inserts = [];
+  const rowsToInsert = [];
   fs.createReadStream(filePath)
     .pipe(csvParser({ mapHeaders: ({ header }) => header.trim().toLowerCase() }))
     .on('data', (row) => {
@@ -266,23 +304,33 @@ app.post('/upload-csv', isAdmin, upload.single('csvfile'), (req, res) => {
       const category = row.category?.trim() || '';
       const company = row.company?.trim() || '';
       if (!name || !email || !mobile || !category) return;
-      const barcode = 'BAR' + Date.now() + Math.floor(Math.random());
-      // The last value must be 'csv'
-      inserts.push([name, email, mobile, designation, category, company, barcode, 'csv']);
+      rowsToInsert.push([name, email, mobile, designation, category, company]);
     })
     .on('end', () => {
-      const stmt = db.prepare(
-        `INSERT OR IGNORE INTO attendees
-         (name, email, mobile, designation, category, company, barcode, source)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-      );
-      inserts.forEach(v => stmt.run(v));
-      stmt.finalize(() => {
-        fs.unlink(filePath, () => {});
-        broadcastUpdate();
-        req.session.success = "CSV uploaded!";
-        res.redirect('/admin');
-      });
+      // Recursive function to insert each row with a unique barcode
+      function insertNext(index) {
+        if (index >= rowsToInsert.length) {
+          fs.unlink(filePath, () => {});
+          broadcastUpdate();
+          req.session.success = "CSV uploaded!";
+          return res.redirect('/admin');
+        }
+        const [name, email, mobile, designation, category, company] = rowsToInsert[index];
+        generateBarcode((err, barcode) => {
+          if (err) {
+            req.session.error = "Barcode generation error.";
+            return res.redirect('/admin');
+          }
+          db.run(
+            `INSERT OR IGNORE INTO attendees
+             (name, email, mobile, designation, category, company, barcode, source)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [name, email, mobile, designation, category, company, barcode, 'csv'],
+            () => insertNext(index + 1)
+          );
+        });
+      }
+      insertNext(0);
     })
     .on('error', (err) => {
       req.session.error = "CSV parsing error: " + err.message;

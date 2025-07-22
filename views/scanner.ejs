@@ -10,13 +10,146 @@
 <body class="bg-gray-900 text-white min-h-screen flex flex-col">
   <%- include('partials/nav', { user: user }) %>
 
-  <main class="flex-1 container mx-auto p-6 text-center">
-    <h2 class="text-2xl font-bold mb-4 text-green-400">Scan Badge</h2>
-    <div id="scanner" class="relative w-full max-w-sm mx-auto aspect-video bg-black rounded overflow-hidden"></div>
-    <p id="scan-status" class="mt-4 text-lg font-semibold"></p>
+  <main class="flex-1 container mx-auto p-2 sm:p-6 text-center">
+    <h2 class="text-xl sm:text-2xl font-bold mb-4 text-green-400">Scan Badge</h2>
+    <div class="flex flex-col md:flex-row gap-8 justify-center items-start">
+      <!-- Camera QR Scanner -->
+      <div class="w-full md:w-1/2 mb-8 md:mb-0">
+        <h3 class="text-base sm:text-lg font-semibold mb-2">Option 1: Scan QR Code</h3>
+        <div id="scanner" class="relative w-full max-w-xs sm:max-w-sm mx-auto aspect-video bg-black rounded overflow-hidden"></div>
+        <p id="scan-status" class="mt-4 text-base sm:text-lg font-semibold"></p>
+      </div>
+      <!-- Manual Barcode Input -->
+      <div class="w-full md:w-1/3 bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg">
+        <h3 class="text-base sm:text-lg font-semibold mb-2">Option 2: Enter Barcode</h3>
+        <form id="barcodeForm" class="flex flex-col gap-4">
+          <label for="barcodeInput" class="text-left">Enter 4-digit code after <span class="font-mono">BAR</span>:</label>
+          <input id="barcodeInput" maxlength="4" pattern="[A-Za-z0-9]{4}" class="p-2 rounded text-black text-center font-mono text-xl" required autocomplete="off" placeholder="e.g. 7C2D">
+          <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-base sm:text-lg">Scan</button>
+        </form>
+        <p id="barcode-status" class="mt-4 text-base sm:text-lg font-semibold"></p>
+      </div>
+    </div>
   </main>
 
   <%- include('partials/footer') %>
-  <script src="/js/scanner.js"></script>
+  <script>
+    // --- Option 1: QR Camera Scanner ---
+    let scanning = false;
+    function showStatus(success, msg) {
+      const status = document.getElementById('scan-status');
+      status.textContent = msg;
+      if (success === true) {
+        status.className = "mt-4 text-base sm:text-lg font-semibold bg-green-500 text-white p-4 rounded";
+        document.body.style.backgroundColor = "#22c55e"; // Tailwind green-500
+      } else if (success === false) {
+        status.className = "mt-4 text-base sm:text-lg font-semibold bg-red-500 text-white p-4 rounded";
+        document.body.style.backgroundColor = "#ef4444"; // Tailwind red-500
+      } else {
+        status.className = "mt-4 text-base sm:text-lg font-semibold";
+        document.body.style.backgroundColor = "#111827"; // Tailwind gray-900
+      }
+    }
+
+    function resetStatus() {
+      showStatus(null, "");
+      document.body.style.backgroundColor = "#111827";
+    }
+
+    // Quagga QR scanner
+    if (window.Quagga) {
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.querySelector('#scanner'),
+          constraints: {
+            facingMode: "environment"
+          }
+        },
+        decoder: {
+          readers: ["qr_reader"]
+        }
+      }, function(err) {
+        if (err) {
+          document.getElementById('scan-status').textContent = "Camera error: " + err;
+          return;
+        }
+        Quagga.start();
+      });
+
+      Quagga.onDetected(function(result) {
+        if (scanning) return;
+        scanning = true;
+        const code = result.codeResult.code;
+        // Send to server for verification
+        fetch('/verify-scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ barcode: code })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showStatus(true, "Verified successfully!");
+          } else if (data.message === "Already scanned") {
+            showStatus(false, "Already scanned!");
+          } else {
+            showStatus(false, data.message || "Not found");
+          }
+          setTimeout(() => { resetStatus(); scanning = false; }, 2000);
+        })
+        .catch(() => {
+          showStatus(false, "Scan error");
+          setTimeout(() => { resetStatus(); scanning = false; }, 2000);
+        });
+      });
+    }
+
+    // --- Option 2: Manual Barcode Input ---
+    document.getElementById('barcodeForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const code = "BAR" + document.getElementById('barcodeInput').value.toUpperCase();
+      const status = document.getElementById('barcode-status');
+      fetch('/verify-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barcode: code })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          status.textContent = "Verified successfully!";
+          status.className = "mt-4 text-base sm:text-lg font-semibold bg-green-500 text-white p-4 rounded";
+          document.body.style.backgroundColor = "#22c55e";
+        } else if (data.message === "Already scanned") {
+          status.textContent = "Already scanned!";
+          status.className = "mt-4 text-base sm:text-lg font-semibold bg-red-500 text-white p-4 rounded";
+          document.body.style.backgroundColor = "#ef4444";
+        } else {
+          status.textContent = data.message || "Not found";
+          status.className = "mt-4 text-base sm:text-lg font-semibold bg-red-500 text-white p-4 rounded";
+          document.body.style.backgroundColor = "#ef4444";
+        }
+        setTimeout(() => {
+          status.textContent = "";
+          status.className = "mt-4 text-base sm:text-lg font-semibold";
+          document.body.style.backgroundColor = "#111827";
+          document.getElementById('barcodeInput').value = "";
+        }, 2000);
+      })
+      .catch(() => {
+        status.textContent = "Scan error";
+        status.className = "mt-4 text-base sm:text-lg font-semibold bg-red-500 text-white p-4 rounded";
+        document.body.style.backgroundColor = "#ef4444";
+        setTimeout(() => {
+          status.textContent = "";
+          status.className = "mt-4 text-base sm:text-lg font-semibold";
+          document.body.style.backgroundColor = "#111827";
+          document.getElementById('barcodeInput').value = "";
+        }, 2000);
+      });
+    });
+  </script>
 </body>
 </html>

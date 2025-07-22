@@ -1,10 +1,9 @@
-// public/js/designer.js
-
 function updateFieldPosition(fieldId, x, y) {
   const el = document.getElementById(fieldId);
   if (el) {
-    el.style.left = x + 'px';
+    el.style.left = "50%";
     el.style.top = y + 'px';
+    el.style.transform = "translateX(-50%)";
   }
 }
 
@@ -22,68 +21,33 @@ function updateFieldAlign(fieldId, align) {
   }
 }
 
-function updateBadgeSize(width, height) {
-  const preview = document.getElementById('card-preview');
-  preview.style.width = width + 'px';
-  preview.style.height = height + 'px';
-}
-
-function applyLayout(layout) {
-  if (!layout) return;
-  Object.entries(layout.fields || {}).forEach(([id, conf]) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.left = conf.left;
-      el.style.top = conf.top;
-      el.style.display = conf.visible ? '' : 'none';
-      if (conf.fontSize) el.style.fontSize = conf.fontSize;
-      if (conf.align) el.style.textAlign = conf.align;
-      // Update checkboxes and inputs
-      const cb = document.querySelector(`.pd-toggle[data-field="${id}"]`);
-      if (cb) cb.checked = conf.visible;
-      const xInput = document.querySelector(`.pd-x[data-field="${id}"]`);
-      const yInput = document.querySelector(`.pd-y[data-field="${id}"]`);
-      if (xInput) xInput.value = parseInt(conf.left);
-      if (yInput) yInput.value = parseInt(conf.top);
-      const fontInput = document.querySelector(`.pd-font[data-field="${id}"]`);
-      if (fontInput && conf.fontSize) fontInput.value = parseInt(conf.fontSize);
-      const alignInput = document.querySelector(`.pd-align[data-field="${id}"]`);
-      if (alignInput && conf.align) alignInput.value = conf.align;
+function updateFieldScale(fieldId, scale) {
+  const el = document.getElementById(fieldId);
+  if (el) {
+    const img = el.querySelector('img');
+    if (img) {
+      img.style.width = scale + 'px';
+      img.style.height = (fieldId === 'pd-barcode' ? Math.round(scale/3) : scale) + 'px';
     }
-  });
-  if (layout.size) {
-    updateBadgeSize(layout.size.width, layout.size.height);
-    // Set selector
-    const sizeStr = layout.size.width + 'x' + layout.size.height;
-    const badgeSize = document.getElementById('badge-size');
-    if (badgeSize.querySelector(`option[value="${sizeStr}"]`)) {
-      badgeSize.value = sizeStr;
-      document.getElementById('custom-size-inputs').classList.add('hidden');
-    } else {
-      badgeSize.value = 'custom';
-      document.getElementById('custom-size-inputs').classList.remove('hidden');
-      document.getElementById('custom-width').value = layout.size.width;
-      document.getElementById('custom-height').value = layout.size.height;
-    }
+    el.style.width = scale + 'px';
+    el.style.height = (fieldId === 'pd-barcode' ? Math.round(scale/3) : scale) + 'px';
   }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  // Manual X/Y/Font/Align controls
-  document.querySelectorAll('.pd-x, .pd-y, .pd-font, .pd-align').forEach(input => {
+  // Manual X/Y/Font/Align/Scale controls
+  document.querySelectorAll('.pd-x, .pd-y, .pd-font, .pd-align, .pd-scale').forEach(input => {
     input.addEventListener('input', function() {
       const field = this.dataset.field;
-      const x = document.querySelector(`.pd-x[data-field="${field}"]`).value || 0;
+      const x = document.querySelector(`.pd-x[data-field="${field}"]`).value || 0; // Not used, always centered
       const y = document.querySelector(`.pd-y[data-field="${field}"]`).value || 0;
       updateFieldPosition(field, x, y);
       const fontInput = document.querySelector(`.pd-font[data-field="${field}"]`);
-      if (fontInput) {
-        updateFieldFont(field, fontInput.value || 14);
-      }
+      if (fontInput) updateFieldFont(field, fontInput.value || 14);
       const alignInput = document.querySelector(`.pd-align[data-field="${field}"]`);
-      if (alignInput) {
-        updateFieldAlign(field, alignInput.value);
-      }
+      if (alignInput) updateFieldAlign(field, alignInput.value);
+      const scaleInput = document.querySelector(`.pd-scale[data-field="${field}"]`);
+      if (scaleInput) updateFieldScale(field, scaleInput.value || 60);
     });
   });
 
@@ -108,15 +72,16 @@ window.addEventListener('DOMContentLoaded', () => {
     } else {
       document.getElementById('custom-size-inputs').classList.add('hidden');
     }
-    updateBadgeSize(w, h);
+    document.getElementById('card-preview').style.width = w + 'px';
+    document.getElementById('card-preview').style.height = h + 'px';
   });
 
   // Custom size inputs
   document.getElementById('custom-width').addEventListener('input', function() {
-    updateBadgeSize(this.value, document.getElementById('custom-height').value);
+    document.getElementById('card-preview').style.width = this.value + 'px';
   });
   document.getElementById('custom-height').addEventListener('input', function() {
-    updateBadgeSize(document.getElementById('custom-width').value, this.value);
+    document.getElementById('card-preview').style.height = this.value + 'px';
   });
 
   // Save layout
@@ -125,12 +90,14 @@ window.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.pd-field').forEach(el => {
       const fontInput = document.querySelector(`.pd-font[data-field="${el.id}"]`);
       const alignInput = document.querySelector(`.pd-align[data-field="${el.id}"]`);
+      const scaleInput = document.querySelector(`.pd-scale[data-field="${el.id}"]`);
+      const yInput = document.querySelector(`.pd-y[data-field="${el.id}"]`);
       layout.fields[el.id] = {
-        left: el.style.left || '0px',
-        top: el.style.top || '0px',
+        top: yInput ? (yInput.value + 'px') : el.style.top || '0px',
         visible: el.style.display !== 'none',
         fontSize: fontInput ? (fontInput.value + 'px') : el.style.fontSize || '',
-        align: alignInput ? alignInput.value : el.style.textAlign || 'left'
+        align: alignInput ? alignInput.value : el.style.textAlign || 'center',
+        scale: scaleInput ? (scaleInput.value + 'px') : el.style.width || ''
       };
     });
     // Badge size
@@ -152,5 +119,24 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Apply saved layout if available
+  function applyLayout(layout) {
+    if (!layout) return;
+    Object.entries(layout.fields || {}).forEach(([id, conf]) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.left = "50%";
+        el.style.transform = "translateX(-50%)";
+        el.style.top = conf.top || '0px';
+        el.style.display = conf.visible ? '' : 'none';
+        if (conf.fontSize) el.style.fontSize = conf.fontSize;
+        if (conf.align) el.style.textAlign = conf.align;
+        if (conf.scale) updateFieldScale(id, parseInt(conf.scale));
+      }
+    });
+    if (layout.size) {
+      document.getElementById('card-preview').style.width = layout.size.width + 'px';
+      document.getElementById('card-preview').style.height = layout.size.height + 'px';
+    }
+  }
   if (window.savedLayout) applyLayout(window.savedLayout);
 });

@@ -1,42 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <title>Client Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white p-6">
-  <h1 class="text-2xl font-bold mb-4">Client Dashboard</h1>
+<body class="bg-gray-900 text-white p-2 sm:p-6">
+  <h1 class="text-xl sm:text-2xl font-bold mb-4">Client Dashboard</h1>
   <p class="mb-4">Total Attendees: <strong><%= attendees.length %></strong></p>
-  
-  <div class="overflow-x-auto">
-    <table class="table-auto w-full border-collapse border border-gray-700">
+
+  <!-- Search/Filter -->
+  <div class="mb-6">
+    <input id="search" type="text" placeholder="Search by name, email, mobile, etc..." class="w-full p-2 border rounded text-black text-sm sm:text-base">
+  </div>
+
+  <% const manualAttendees = attendees.filter(a => !a.source || a.source.trim().toLowerCase() !== 'csv'); %>
+  <% const csvAttendees = attendees.filter(a => a.source && a.source.trim().toLowerCase() === 'csv'); %>
+
+  <!-- Manually Registered Attendees -->
+  <h2 class="text-lg sm:text-xl font-bold text-green-400 mt-6 mb-2">Manually Registered Attendees</h2>
+  <div class="overflow-x-auto mb-8 rounded-lg">
+    <table class="min-w-[600px] w-full border-collapse border border-gray-700 text-xs sm:text-sm md:text-base" id="manual-table">
       <thead class="bg-gray-800">
         <tr>
-          <th class="border border-gray-700 px-4 py-2">#</th>
-          <th class="border border-gray-700 px-4 py-2">Name</th>
-          <th class="border border-gray-700 px-4 py-2">Email</th>
-          <th class="border border-gray-700 px-4 py-2">Mobile</th>
-          <th class="border border-gray-700 px-4 py-2">Designation</th>
-          <th class="border border-gray-700 px-4 py-2">Category</th>
-          <th class="border border-gray-700 px-4 py-2">Scanned</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">#</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Name</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Email</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Mobile</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Designation</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Category</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Company</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Scanned</th>
         </tr>
       </thead>
       <tbody>
-        <% attendees.forEach((a, index) => { %>
-          <tr class="bg-gray-800 hover:bg-gray-700">
-            <td class="border border-gray-700 px-4 py-2"><%= index + 1 %></td>
-            <td class="border border-gray-700 px-4 py-2"><%= a.name %></td>
-            <td class="border border-gray-700 px-4 py-2"><%= a.email %></td>
-            <td class="border border-gray-700 px-4 py-2"><%= a.mobile %></td>
-            <td class="border border-gray-700 px-4 py-2"><%= a.designation %></td>
-            <td class="border border-gray-700 px-4 py-2"><%= a.category %></td>
-            <td class="border border-gray-700 px-4 py-2"><%= a.scanned ? '✅' : '❌' %></td>
+        <% manualAttendees.forEach((a, index) => { %>
+          <tr class="bg-gray-800 hover:bg-gray-700 attendee-row">
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= index + 1 %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.name %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.email %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.mobile %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.designation %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.category %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.company %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2 <%= a.scanned ? 'text-green-400' : 'text-red-400' %>">
+              <%= a.scanned ? '✅' : '❌' %>
+            </td>
           </tr>
         <% }) %>
       </tbody>
     </table>
   </div>
+
+  <!-- CSV Uploaded Attendees -->
+  <h2 class="text-lg sm:text-xl font-bold text-blue-400 mt-6 mb-2">CSV Uploaded Attendees</h2>
+  <div class="overflow-x-auto rounded-lg">
+    <table class="min-w-[600px] w-full border-collapse border border-gray-700 text-xs sm:text-sm md:text-base" id="csv-table">
+      <thead class="bg-gray-800">
+        <tr>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">#</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Name</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Email</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Mobile</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Designation</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Category</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Company</th>
+          <th class="border border-gray-700 px-2 sm:px-4 py-2">Scanned</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% csvAttendees.forEach((a, index) => { %>
+          <tr class="bg-gray-800 hover:bg-gray-700 attendee-row">
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= index + 1 %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.name %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.email %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.mobile %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.designation %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.category %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2"><%= a.company %></td>
+            <td class="border border-gray-700 px-2 sm:px-4 py-2 <%= a.scanned ? 'text-green-400' : 'text-red-400' %>">
+              <%= a.scanned ? '✅' : '❌' %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    // Responsive client-side search for both tables
+    document.getElementById('search').addEventListener('input', function () {
+      const term = this.value.toLowerCase();
+      document.querySelectorAll('#manual-table .attendee-row').forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+      });
+      document.querySelectorAll('#csv-table .attendee-row').forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
+      });
+    });
+  </script>
 </body>
 </html>

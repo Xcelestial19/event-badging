@@ -5,40 +5,120 @@
   <title>Badge: <%= attendee ? attendee.name : 'Attendee' %></title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body{display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff;}
-    .badge{position:relative;background:#fff;border:2px solid #000;padding:0;}
-    @media print{body{margin:0;height:auto;background:#fff;}.badge{box-shadow:none;border:1px solid #000;}#printBtn{display:none;}}
-    #printBtn{position:absolute;top:-50px;right:0;padding:6px 12px;background:#2563eb;color:#fff;border:none;cursor:pointer;font-size:14px;border-radius:4px;}
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #fff;
+    }
+    .badge {
+      position: relative;
+      background: #fff;
+      border: 2px solid #000;
+      box-sizing: border-box;
+      padding: 0;
+    }
+    .badge-field {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  font-family: Arial, sans-serif;
+  color: #000;
+  max-width: 90%;
+  min-width: 100px;
+  font-size: 18px;
+  font-weight: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+   white-space: nowrap;
+  text-overflow: ellipsis; 
+}
+    .barcode-number, .qr-number {
+      text-align: center;
+      width: 100%;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .badge img {
+      display: block;
+      margin: 0 auto;
+    }
+    @media print {
+      body { margin: 0; height: auto; background: #fff; }
+      .badge { border: none !important; }
+      #printBtn { display: none; }
+    }
+    #printBtn {
+      position: absolute;
+      top: -50px;
+      right: 0;
+      padding: 6px 12px;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
   <div class="badge" style="width:<%= layout && layout.size ? layout.size.width : 350 %>px;height:<%= layout && layout.size ? layout.size.height : 220 %>px;">
     <button id="printBtn" onclick="window.print()">Print</button>
-    <% function fieldStyle(field) { 
-      if (!layout || !layout.fields || !layout.fields[field]) return '';
+    <% function fieldStyle(field, fallbackTop, fallbackScale, fallbackFont) { 
+      if (!layout || !layout.fields || !layout.fields[field]) {
+        return `top:${fallbackTop};width:${fallbackScale};font-size:${fallbackFont};`;
+      }
       const f = layout.fields[field];
-      return `position:absolute;left:${f.left};top:${f.top};display:${f.visible ? '' : 'none'};font-size:${f.fontSize || '14px'};text-align:${f.align || 'left'};`;
+      let scale = parseInt(f.scale) || 200;
+      if (scale < 40) scale = 40;
+      return `
+        top: ${f.top || fallbackTop};
+        width: ${scale}px;
+        font-size: ${f.fontSize || fallbackFont};
+        text-align: ${f.align || 'center'};
+        display: ${f.visible ? '' : 'none'};
+      `;
     } %>
     <% if (layout && layout.fields && layout.fields['pd-name'] && layout.fields['pd-name'].visible) { %>
-      <h2 id="pd-name" style="<%= fieldStyle('pd-name') %>"><%= attendee.name %></h2>
+      <div class="badge-field" style="<%= fieldStyle('pd-name', '30px', '200px', '22px') %>;font-weight:bold;text-transform:uppercase;letter-spacing:1px;"><%= attendee.name %></div>
     <% } %>
     <% if (attendee.designation && layout && layout.fields && layout.fields['pd-designation'] && layout.fields['pd-designation'].visible) { %>
-      <p id="pd-designation" style="<%= fieldStyle('pd-designation') %>"><%= attendee.designation %></p>
+      <div class="badge-field" style="<%= fieldStyle('pd-designation', '60px', '200px', '18px') %>"><%= attendee.designation %></div>
     <% } %>
     <% if (layout && layout.fields && layout.fields['pd-category'] && layout.fields['pd-category'].visible) { %>
-      <p id="pd-category" style="<%= fieldStyle('pd-category') %>"><%= attendee.category %></p>
+      <div class="badge-field" style="<%= fieldStyle('pd-category', '90px', '200px', '16px') %>"><%= attendee.category %></div>
     <% } %>
     <% if (layout && layout.fields && layout.fields['pd-company'] && layout.fields['pd-company'].visible) { %>
-      <p id="pd-company" style="<%= fieldStyle('pd-company') %>"><%= attendee.company || '' %></p>
+      <div class="badge-field" style="<%= fieldStyle('pd-company', '120px', '200px', '16px') %>"><%= attendee.company || '' %></div>
     <% } %>
-    <% if (layout && layout.fields && layout.fields['pd-phone'] && layout.fields['pd-phone'].visible) { %>
-      <p id="pd-phone" style="<%= fieldStyle('pd-phone') %>"><%= attendee.phone || '' %></p>
+    <% if (layout && layout.fields && layout.fields['pd-mobile'] && layout.fields['pd-mobile'].visible) { %>
+      <div class="badge-field" style="<%= fieldStyle('pd-mobile', '150px', '200px', '16px') %>"><%= attendee.mobile || '' %></div>
     <% } %>
+    <!-- Barcode -->
     <% if (layout && layout.fields && layout.fields['pd-barcode'] && layout.fields['pd-barcode'].visible) { %>
-      <img id="pd-barcode" style="<%= fieldStyle('pd-barcode') %>width:120px;" src="https://barcode.tec-it.com/barcode.ashx?data=<%= attendee.barcode %>&code=Code128&translate-esc=false" alt="barcode">
+      <div class="badge-field" style="<%= fieldStyle('pd-barcode', '180px', '120px', '12px') %>">
+        <img src="https://barcode.tec-it.com/barcode.ashx?data=<%= attendee.barcode %>&code=Code128&translate-esc=false"
+             alt="barcode"
+             style="width:100%;height:40px;">
+        <div class="barcode-number"><%= attendee.barcode %></div>
+      </div>
     <% } %>
+    <!-- QR Code -->
     <% if (layout && layout.fields && layout.fields['pd-qr'] && layout.fields['pd-qr'].visible) { %>
-      <img id="pd-qr" style="<%= fieldStyle('pd-qr') %>width:60px;" src="https://api.qrserver.com/v1/create-qr-code/?data=<%= attendee.barcode %>&size=60x60" alt="qr">
+      <div class="badge-field" style="<%= fieldStyle('pd-qr', '180px', '60px', '12px') %>">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?data=<%= attendee.barcode %>&size=<%= layout.fields['pd-qr'].scale ? layout.fields['pd-qr'].scale.replace('px','') : '60' %>x<%= layout.fields['pd-qr'].scale ? layout.fields['pd-qr'].scale.replace('px','') : '60' %>"
+             alt="qr"
+             style="width:100%;height:60px;">
+        <div class="qr-number"><%= attendee.barcode %></div>
+      </div>
     <% } %>
   </div>
 </body>

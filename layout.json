@@ -1,53 +1,53 @@
 {
   "fields": {
     "pd-name": {
-      "left": "40px",
-      "top": "300px",
+      "top": "305px",
       "visible": true,
       "fontSize": "20px",
-      "align": "left"
+      "align": "center",
+      "scale": "200px"
     },
     "pd-designation": {
-      "left": "40px",
-      "top": "350px",
+      "top": "340px",
       "visible": true,
       "fontSize": "20px",
-      "align": "left"
+      "align": "center",
+      "scale": "200px"
     },
     "pd-category": {
-      "left": "109px",
-      "top": "116px",
-      "visible": false,
-      "fontSize": "39px",
-      "align": "left"
-    },
-    "pd-company": {
-      "left": "40px",
-      "top": "400px",
-      "visible": true,
-      "fontSize": "20px",
-      "align": "left"
-    },
-    "pd-phone": {
-      "left": "14px",
-      "top": "0px",
+      "top": "px",
       "visible": false,
       "fontSize": "px",
-      "align": "left"
+      "align": "center",
+      "scale": "200px"
+    },
+    "pd-company": {
+      "top": "375px",
+      "visible": true,
+      "fontSize": "20px",
+      "align": "center",
+      "scale": "200px"
+    },
+    "pd-mobile": {
+      "top": "px",
+      "visible": false,
+      "fontSize": "px",
+      "align": "left",
+      "scale": "200px"
     },
     "pd-barcode": {
-      "left": "0px",
-      "top": "130px",
-      "visible": true,
+      "top": "px",
+      "visible": false,
       "fontSize": "",
-      "align": "left"
+      "align": "left",
+      "scale": "px"
     },
     "pd-qr": {
-      "left": "250px",
-      "top": "350px",
+      "top": "414px",
       "visible": true,
       "fontSize": "",
-      "align": "left"
+      "align": "left",
+      "scale": "70px"
     }
   },
   "size": {
