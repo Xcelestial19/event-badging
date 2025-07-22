@@ -85,12 +85,21 @@
       if (window.Html5Qrcode) {
         const qrReader = new Html5Qrcode("qr-reader");
         Html5Qrcode.getCameras().then(cameras => {
-          let cameraId = cameras && cameras.length ? cameras[0].id : null;
+          let cameraId = null;
+          // Prefer a camera with "back" or "environment" in the label
+          if (cameras && cameras.length) {
+            cameraId = cameras[0].id;
+            cameras.forEach(cam => {
+              if (cam.label.toLowerCase().includes('back') || cam.label.toLowerCase().includes('environment')) {
+                cameraId = cam.id;
+              }
+            });
+          }
           qrReader.start(
-            cameraId,
+            { deviceId: { exact: cameraId }, facingMode: "environment" },
             {
               fps: 10,
-              qrbox: { width: 250, height: 250 }
+              qrbox: { width: 300, height: 300 }
             },
             onScanSuccess
           );
