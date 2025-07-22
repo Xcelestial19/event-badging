@@ -96,11 +96,8 @@
             });
           }
           qrReader.start(
-            { deviceId: { exact: cameraId }, facingMode: "environment" },
-            {
-              fps: 10,
-              qrbox: { width: 300, height: 300 }
-            },
+            { deviceId: { exact: cameraId } }, // Only deviceId, not facingMode
+            { fps: 10, qrbox: { width: 300, height: 300 } },
             onScanSuccess
           );
         }).catch(err => {
