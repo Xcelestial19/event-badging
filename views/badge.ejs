@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Badge: <%= attendee ? attendee.name : 'Attendee' %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body{display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#fff;}
+    .badge{position:relative;background:#fff;border:2px solid #000;padding:0;}
+    @media print{body{margin:0;height:auto;background:#fff;}.badge{box-shadow:none;border:1px solid #000;}#printBtn{display:none;}}
+    #printBtn{position:absolute;top:-50px;right:0;padding:6px 12px;background:#2563eb;color:#fff;border:none;cursor:pointer;font-size:14px;border-radius:4px;}
+  </style>
+</head>
+<body>
+  <div class="badge" style="width:<%= layout && layout.size ? layout.size.width : 350 %>px;height:<%= layout && layout.size ? layout.size.height : 220 %>px;">
+    <button id="printBtn" onclick="window.print()">Print</button>
+    <% function fieldStyle(field) { 
+      if (!layout || !layout.fields || !layout.fields[field]) return '';
+      const f = layout.fields[field];
+      return `position:absolute;left:${f.left};top:${f.top};display:${f.visible ? '' : 'none'};font-size:${f.fontSize || '14px'};text-align:${f.align || 'left'};`;
+    } %>
+    <% if (layout && layout.fields && layout.fields['pd-name'] && layout.fields['pd-name'].visible) { %>
+      <h2 id="pd-name" style="<%= fieldStyle('pd-name') %>"><%= attendee.name %></h2>
+    <% } %>
+    <% if (attendee.designation && layout && layout.fields && layout.fields['pd-designation'] && layout.fields['pd-designation'].visible) { %>
+      <p id="pd-designation" style="<%= fieldStyle('pd-designation') %>"><%= attendee.designation %></p>
+    <% } %>
+    <% if (layout && layout.fields && layout.fields['pd-category'] && layout.fields['pd-category'].visible) { %>
+      <p id="pd-category" style="<%= fieldStyle('pd-category') %>"><%= attendee.category %></p>
+    <% } %>
+    <% if (layout && layout.fields && layout.fields['pd-company'] && layout.fields['pd-company'].visible) { %>
+      <p id="pd-company" style="<%= fieldStyle('pd-company') %>"><%= attendee.company || '' %></p>
+    <% } %>
+    <% if (layout && layout.fields && layout.fields['pd-phone'] && layout.fields['pd-phone'].visible) { %>
+      <p id="pd-phone" style="<%= fieldStyle('pd-phone') %>"><%= attendee.phone || '' %></p>
+    <% } %>
+    <% if (layout && layout.fields && layout.fields['pd-barcode'] && layout.fields['pd-barcode'].visible) { %>
+      <img id="pd-barcode" style="<%= fieldStyle('pd-barcode') %>width:120px;" src="https://barcode.tec-it.com/barcode.ashx?data=<%= attendee.barcode %>&code=Code128&translate-esc=false" alt="barcode">
+    <% } %>
+    <% if (layout && layout.fields && layout.fields['pd-qr'] && layout.fields['pd-qr'].visible) { %>
+      <img id="pd-qr" style="<%= fieldStyle('pd-qr') %>width:60px;" src="https://api.qrserver.com/v1/create-qr-code/?data=<%= attendee.barcode %>&size=60x60" alt="qr">
+    <% } %>
+  </div>
+</body>
+</html>

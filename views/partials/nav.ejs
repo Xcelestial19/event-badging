@@ -1,0 +1,14 @@
+<nav class="bg-gray-800 p-4 flex justify-between items-center shadow-md">
+  <a href="/" class="text-xl font-bold text-blue-400">Event Badging</a>
+  <div class="flex items-center space-x-4">
+    <% if (user) { %>
+      <a href="/admin" class="hover:text-blue-300">Admin</a>
+      <a href="/scan" class="hover:text-blue-300">Scanner</a>
+      <a href="/print-designer" class="hover:text-blue-300">Print Designer</a>
+      <a href="/client-dashboard" class="hover:text-blue-300">Dashboard</a>
+      <a href="/logout" class="hover:text-red-300">Logout</a>
+    <% } else { %>
+      <a href="/login" class="hover:text-blue-300">Login</a>
+    <% } %>
+  </div>
+</nav>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Register Attendee</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+  <%- include('partials/nav', { user: user }) %>
+
+  <main class="flex-1 container mx-auto p-6 max-w-lg">
+    <h2 class="text-2xl font-bold text-blue-400 mb-4">Register Attendee</h2>
+    <% if (success) { %>
+  <div class="bg-green-500 text-white p-2 rounded mb-2 text-center"><%= success %></div>
+<% } %>
+<% if (error) { %>
+  <div class="bg-red-500 text-white p-2 rounded mb-2 text-center"><%= error %></div>
+<% } %>
+    <form id="registerForm" method="POST" action="/register" class="space-y-4 bg-gray-800 p-6 rounded-lg shadow-lg">
+      <input name="name" placeholder="Full Name" class="border p-2 w-full text-black" required>
+      <input name="email" type="email" placeholder="Email" class="border p-2 w-full text-black" required>
+      <input name="mobile" placeholder="Mobile" class="border p-2 w-full text-black" required>
+      <input name="designation" placeholder="Designation" class="border p-2 w-full text-black" required>
+       <input name="company" placeholder="Company" class="border p-2 w-full text-black">
+      <select name="category" class="border p-2 w-full text-black" required>
+        <option value="Delegate">Delegate</option>
+        <option value="Faculty">Faculty</option>
+        <option value="Organizer">Organizer</option>
+      </select>
+
+      <% if (user) { %>
+        <!-- If Admin -->
+        <div class="flex gap-2">
+          <button type="submit" name="action" value="submit" class="w-1/2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded">Submit</button>
+          <button type="submit" name="action" value="submit-print" class="w-1/2 bg-green-500 hover:bg-green-600 text-white font-bold py-2 rounded">Submit & Print</button>
+        </div>
+      <% } else { %>
+        <!-- Normal User -->
+        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded">Submit</button>
+      <% } %>
+    </form>
+  </main>
+
+  <%- include('partials/footer') %>
+</body>
+</html>

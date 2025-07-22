@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Event Badging' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' };
+  </script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+  <!-- Navbar -->
+  <nav class="bg-gray-800 p-4 flex justify-between items-center shadow-md">
+    <a href="/" class="text-xl font-bold text-blue-400">Event Badging</a>
+    <div class="flex items-center space-x-4">
+      <% const isAdmin = (typeof user !== 'undefined' && user); %>
+      <% if (isAdmin) { %>
+        <a href="/admin" class="hover:text-blue-300">Admin</a>
+        <a href="/scan" class="hover:text-blue-300">Scanner</a>
+        <a href="/print-designer" class="hover:text-blue-300">Print Designer</a>
+        <a href="/client-dashboard" class="hover:text-blue-300">Dashboard</a>
+        <a href="/logout" class="hover:text-red-300">Logout</a>
+      <% } else { %>
+        <a href="/login" class="hover:text-blue-300">Login</a>
+      <% } %>
+    </div>
+  </nav>
+
+  <% if (success) { %>
+  <div class="bg-green-500 text-white p-2 rounded mb-2 text-center"><%= success %></div>
+<% } %>
+<% if (error) { %>
+  <div class="bg-red-500 text-white p-2 rounded mb-2 text-center"><%= error %></div>
+<% } %>
+
+  <main class="flex-1 container mx-auto p-6">
+    <%- typeof body !== 'undefined' ? body : '' %>
+  </main>
+
+  <footer class="bg-gray-800 text-center p-4 text-gray-400">
+    &copy; <%= (typeof year !== 'undefined' ? year : new Date().getFullYear()) %> Event Badging System
+  </footer>
+</body>
+</html>

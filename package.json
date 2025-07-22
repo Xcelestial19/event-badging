@@ -1,0 +1,28 @@
+{
+  "name": "event-badging",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build:css": "npx tailwindcss -i ./public/css/input.css -o ./public/css/output.css --minify"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "body-parser": "^2.2.0",
+    "connect-flash": "^0.1.1",
+    "csv-parser": "^3.2.0",
+    "dotenv": "^16.0.3",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^2.0.1",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "tailwindcss": "^3.4.17"
+  }
+}

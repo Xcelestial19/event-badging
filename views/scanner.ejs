@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Scanner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@ericblade/quagga2/dist/quagga.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
+  <%- include('partials/nav', { user: user }) %>
+
+  <main class="flex-1 container mx-auto p-6 text-center">
+    <h2 class="text-2xl font-bold mb-4 text-green-400">Scan Badge</h2>
+    <div id="scanner" class="relative w-full max-w-sm mx-auto aspect-video bg-black rounded overflow-hidden"></div>
+    <p id="scan-status" class="mt-4 text-lg font-semibold"></p>
+  </main>
+
+  <%- include('partials/footer') %>
+  <script src="/js/scanner.js"></script>
+</body>
+</html>

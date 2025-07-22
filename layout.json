@@ -1,0 +1,57 @@
+{
+  "fields": {
+    "pd-name": {
+      "left": "40px",
+      "top": "300px",
+      "visible": true,
+      "fontSize": "20px",
+      "align": "left"
+    },
+    "pd-designation": {
+      "left": "40px",
+      "top": "350px",
+      "visible": true,
+      "fontSize": "20px",
+      "align": "left"
+    },
+    "pd-category": {
+      "left": "109px",
+      "top": "116px",
+      "visible": false,
+      "fontSize": "39px",
+      "align": "left"
+    },
+    "pd-company": {
+      "left": "40px",
+      "top": "400px",
+      "visible": true,
+      "fontSize": "20px",
+      "align": "left"
+    },
+    "pd-phone": {
+      "left": "14px",
+      "top": "0px",
+      "visible": false,
+      "fontSize": "px",
+      "align": "left"
+    },
+    "pd-barcode": {
+      "left": "0px",
+      "top": "130px",
+      "visible": true,
+      "fontSize": "",
+      "align": "left"
+    },
+    "pd-qr": {
+      "left": "250px",
+      "top": "350px",
+      "visible": true,
+      "fontSize": "",
+      "align": "left"
+    }
+  },
+  "size": {
+    "width": 400,
+    "height": 600
+  }
+}

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6">
+  <h1 class="text-2xl font-bold mb-4">Client Dashboard</h1>
+  <p class="mb-4">Total Attendees: <strong><%= attendees.length %></strong></p>
+  
+  <div class="overflow-x-auto">
+    <table class="table-auto w-full border-collapse border border-gray-700">
+      <thead class="bg-gray-800">
+        <tr>
+          <th class="border border-gray-700 px-4 py-2">#</th>
+          <th class="border border-gray-700 px-4 py-2">Name</th>
+          <th class="border border-gray-700 px-4 py-2">Email</th>
+          <th class="border border-gray-700 px-4 py-2">Mobile</th>
+          <th class="border border-gray-700 px-4 py-2">Designation</th>
+          <th class="border border-gray-700 px-4 py-2">Category</th>
+          <th class="border border-gray-700 px-4 py-2">Scanned</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% attendees.forEach((a, index) => { %>
+          <tr class="bg-gray-800 hover:bg-gray-700">
+            <td class="border border-gray-700 px-4 py-2"><%= index + 1 %></td>
+            <td class="border border-gray-700 px-4 py-2"><%= a.name %></td>
+            <td class="border border-gray-700 px-4 py-2"><%= a.email %></td>
+            <td class="border border-gray-700 px-4 py-2"><%= a.mobile %></td>
+            <td class="border border-gray-700 px-4 py-2"><%= a.designation %></td>
+            <td class="border border-gray-700 px-4 py-2"><%= a.category %></td>
+            <td class="border border-gray-700 px-4 py-2"><%= a.scanned ? '✅' : '❌' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
